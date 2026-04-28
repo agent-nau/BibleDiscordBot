@@ -21,7 +21,7 @@ async function sendRandomVerse(channel) {
 export default {
   data: new SlashCommandBuilder()
     .setName('setbibleverse')
-    .setDescription('Sends a random Bible verse in the channel. Can specify a book, chapter, verse or default for random. (Sends depends on what time interval you set. the default is 4 hours.)')
+    .setDescription('Set or send a random Bible verse with an optional interval.')
     .addStringOption(option =>
       option.setName('book')
         .setDescription('The book of the Bible (e.g., Genesis, Psalms)')
