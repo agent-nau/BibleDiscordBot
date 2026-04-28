@@ -1,4 +1,9 @@
 {
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "build": "echo 'No build step required'"
+  },
   "dependencies": {
     "discord.js": "^14.26.3",
     "dotenv": "^17.4.2",
