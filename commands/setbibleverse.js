@@ -1,20 +1,56 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 
 const scheduledVerses = new Map(); // channelId -> { intervalId, channel }
 
-async function sendRandomVerse(channel) {
-    const testaments = ['OT', 'NT'];
-    const randomTestament = testaments[Math.floor(Math.random() * testaments.length)];
-    const url = `https://bible-api.com/data/web/random/${randomTestament}`;
+/**
+ * Fetches a random verse from the Bible API.
+ */
+async function fetchRandomVerse() {
+    const url = `https://bible-api.com/data/web/random`;
 
     try {
         const response = await fetch(url);
+        if (!response.ok) return null;
+        
         const data = await response.json();
-        if (data.text) {
-            await channel.send(`📖 **${data.reference}**\n\n${data.text}`);
+        // The API returns: { translation: {...}, random_verse: { book, chapter, verse, text, ... } }
+        if (data.random_verse && data.random_verse.text) {
+            return {
+                reference: `${data.random_verse.book} ${data.random_verse.chapter}:${data.random_verse.verse}`,
+                text: data.random_verse.text.trim(),
+                translation: data.translation.name
+            };
         }
     } catch (error) {
-        console.error('Error sending scheduled verse:', error);
+        console.error('Error fetching random verse:', error);
+    }
+    return null;
+}
+
+/**
+ * Creates a premium-looking Bible verse embed.
+ */
+function createVerseEmbed(verse) {
+    return new EmbedBuilder()
+        .setColor(0xFFA500) // Golden Orange
+        .setTitle(`📖 ${verse.reference}`)
+        .setDescription(`*"${verse.text}"*`)
+        .setFooter({ text: `Translation: ${verse.translation} • Daily Inspiration` })
+        .setTimestamp();
+}
+
+/**
+ * Sends a random verse to a channel (used for scheduling).
+ */
+async function sendScheduledVerse(channel) {
+    const verse = await fetchRandomVerse();
+    if (verse) {
+        const embed = createVerseEmbed(verse);
+        try {
+            await channel.send({ embeds: [embed] });
+        } catch (error) {
+            console.error(`Failed to send scheduled verse to channel ${channel.id}:`, error);
+        }
     }
 }
 
@@ -41,21 +77,19 @@ export default {
             });
         }
 
-        // URL for a completely random verse
-        const testaments = ['OT', 'NT'];
-        const randomTestament = testaments[Math.floor(Math.random() * testaments.length)];
-        const url = `https://bible-api.com/data/web/random/${randomTestament}`;
-
-        await interaction.deferReply();
+        // Defer reply as ephemeral to hide it from others
+        await interaction.deferReply({ ephemeral: true });
 
         try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('API request failed');
+            const verse = await fetchRandomVerse();
             
-            const data = await response.json();
-            
-            if (data.text) {
-                let responseText = `📖 **${data.reference}**\n\n${data.text}`;
+            if (verse) {
+                const embed = createVerseEmbed(verse);
+                
+                // Send the embed publicly to the channel
+                await interaction.channel.send({ embeds: [embed] });
+
+                let statusText = '✅ Sent!';
                 
                 // Handle scheduling
                 const channelId = interaction.channel.id;
@@ -69,21 +103,22 @@ export default {
 
                     if (intervalHours > 0) {
                         const intervalMs = intervalHours * 60 * 60 * 1000;
-                        const intervalId = setInterval(() => sendRandomVerse(interaction.channel), intervalMs);
+                        const intervalId = setInterval(() => sendScheduledVerse(interaction.channel), intervalMs);
                         scheduledVerses.set(channelId, { intervalId, channel: interaction.channel });
-                        responseText += `\n\n✅ **Scheduled!** A random verse will be sent every ${intervalHours} hour(s) in this channel.`;
+                        statusText = `✅ **Sent and Scheduled!** A random verse will be sent every ${intervalHours} hour(s) in this channel.`;
                     } else if (intervalHours === 0 && existing) {
-                        responseText += `\n\n🛑 **Stopped!** Automatic verses have been disabled for this channel.`;
+                        statusText = `✅ **Sent!** Automatic verses have been disabled for this channel.`;
                     }
                 }
 
-                await interaction.editReply(responseText);
+                // Edit the ephemeral reply to show completion status
+                await interaction.editReply({ content: statusText });
             } else {
-                await interaction.editReply('❌ Failed to fetch a random verse. Please try again later.');
+                await interaction.editReply({ content: '❌ Failed to fetch a random verse. Please try again later.' });
             }
         } catch (error) {
-            console.error('Error in setbibleverse:', error);
-            await interaction.editReply('❌ There was an error fetching the Bible verse. Please try again later.');
+            console.error('Error in setbibleverse command:', error);
+            await interaction.editReply({ content: '❌ There was an error processing the Bible verse. Please try again later.' });
         }
     }
 };

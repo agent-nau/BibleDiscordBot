@@ -1,11 +1,20 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 
 export default {
     data: new SlashCommandBuilder()
         .setName('donate')
         .setDescription('Provides information on how to support the bot.'),
     async execute(interaction) {
-        const donateMessage = `🙏 If you'd like to support the bot, you can donate via [Patreon](https://donate.vecscorporation.shop). Your support helps with hosting costs and future development! Thank you! 🙏`;
-        await interaction.reply({ content: donateMessage, ephemeral: true });
+        const embed = new EmbedBuilder()
+            .setColor(0xFFD700) // Gold
+            .setTitle('🙏 Support Our Mission')
+            .setDescription('Your support helps us keep the bot running and bring the Word of God to more people! Hosting costs and development are supported by kind users like you.')
+            .addFields(
+                { name: '💖 Patreon', value: '[Click here to support us!](https://donate.vecscorporation.shop)', inline: true }
+            )
+            .setFooter({ text: 'Thank you for your generosity! • Bible Bot' })
+            .setTimestamp();
+
+        await interaction.reply({ embeds: [embed], ephemeral: true });
     }
 }

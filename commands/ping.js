@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 
 export default {
     data: new SlashCommandBuilder() 
@@ -8,6 +8,7 @@ export default {
   async execute(interaction) {
     const response = await interaction.reply({ 
       content: 'Pinging...', 
+      ephemeral: true,
       withResponse: true 
     });
     
@@ -16,8 +17,19 @@ export default {
     const latency = sent.createdTimestamp - interaction.createdTimestamp;
     const apiLatency = Math.round(interaction.client.ws.ping);
 
+    const embed = new EmbedBuilder()
+        .setColor(0x00AE86) // Teal
+        .setTitle('🏓 Pong!')
+        .addFields(
+            { name: '⏱️ Bot Latency', value: `\`${latency}ms\``, inline: true },
+            { name: '🌐 API Latency', value: `\`${apiLatency}ms\``, inline: true }
+        )
+        .setFooter({ text: 'Bible Bot • Performance' })
+        .setTimestamp();
+
     await interaction.editReply({
-      content: `🏓 Pong!\n\n⏱️ Bot Latency: ${latency}ms\n🌐 API Latency: ${apiLatency}ms`
+      content: null,
+      embeds: [embed]
     });
   },
 };
