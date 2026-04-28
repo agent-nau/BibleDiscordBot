@@ -4,7 +4,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { keepAlive } from './keep-alive.js';
-import { handleButton } from './handlers/buttonHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -76,12 +75,6 @@ client.on('interactionCreate', async interaction => {
       }
 
       await command.execute(interaction);
-    }
-    
-    // Handle Buttons
-    else if (interaction.isButton()) {
-      console.log(`[Interaction] Button clicked: ${interaction.customId} by ${interaction.user.id}`);
-      await handleButton(interaction);
     }
     
     // Handle other interaction types if needed
