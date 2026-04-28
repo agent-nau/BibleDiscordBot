@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +10,8 @@ export default {
   data: new SlashCommandBuilder()
     .setName('help')
     .setDescription('Provides information about available commands.')
+    .setIntegrationTypes([0, 1])
+    .setContexts([0, 1, 2])
     .addStringOption(option =>
       option.setName('command')
         .setDescription('The specific command to get help for')
@@ -34,13 +36,13 @@ export default {
                     embed.setTitle(`📖 Command: /${commandName}`)
                          .setDescription(cmd.data.description || 'No description available.');
                     
-                    await interaction.reply({ embeds: [embed], ephemeral: true });
+                    await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
                 } catch (error) {
                     console.error(`Error loading help for ${commandName}:`, error);
-                    await interaction.reply({ content: '❌ Error loading command details.', ephemeral: true });
+                    await interaction.reply({ content: '❌ Error loading command details.', flags: [MessageFlags.Ephemeral] });
                 }
             } else {
-                await interaction.reply({ content: '❌ Unknown command. Use `/help` to see all available commands.', ephemeral: true });
+                await interaction.reply({ content: '❌ Unknown command. Use `/help` to see all available commands.', flags: [MessageFlags.Ephemeral] });
             }
         } else {
             embed.setTitle('🤖 Available Commands')
@@ -52,7 +54,7 @@ export default {
                      { name: '💡 Tip', value: 'Use `/help <command>` for more details on a specific command.' }
                  );
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
         }
     }
 }

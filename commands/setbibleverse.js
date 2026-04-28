@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 
 const scheduledVerses = new Map(); // channelId -> { intervalId, channel }
 
@@ -13,7 +13,6 @@ async function fetchRandomVerse() {
         if (!response.ok) return null;
         
         const data = await response.json();
-        // The API returns: { translation: {...}, random_verse: { book, chapter, verse, text, ... } }
         if (data.random_verse && data.random_verse.text) {
             return {
                 reference: `${data.random_verse.book} ${data.random_verse.chapter}:${data.random_verse.verse}`,
@@ -58,6 +57,8 @@ export default {
     data: new SlashCommandBuilder()
         .setName('setbibleverse')
         .setDescription('Get a random Bible verse or set an interval for automatic verses.')
+        .setIntegrationTypes([0, 1])
+        .setContexts([0, 1, 2])
         .addIntegerOption(option =>
             option.setName('interval')
                 .setDescription('Interval in hours to send verses automatically (0 to stop)')
@@ -67,18 +68,23 @@ export default {
         ),
 
     async execute(interaction) {
+        // Defer reply IMMEDIATELY to prevent "Unknown interaction" (timeout)
+        // Using flags instead of ephemeral to fix deprecation warning
+        try {
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+        } catch (error) {
+            console.error('Error deferring reply:', error);
+            return; // Interaction likely timed out
+        }
+
         const intervalHours = interaction.options.getInteger('interval');
 
         // Owner check ONLY for scheduling
         if (intervalHours !== null && interaction.user.id !== process.env.OWNER_ID) {
-            return await interaction.reply({ 
-                content: '❌ Only the bot owner can set or stop automatic verse intervals.', 
-                ephemeral: true 
+            return await interaction.editReply({ 
+                content: '❌ Only the bot owner can set or stop automatic verse intervals.'
             });
         }
-
-        // Defer reply as ephemeral to hide it from others
-        await interaction.deferReply({ ephemeral: true });
 
         try {
             const verse = await fetchRandomVerse();
@@ -118,7 +124,12 @@ export default {
             }
         } catch (error) {
             console.error('Error in setbibleverse command:', error);
-            await interaction.editReply({ content: '❌ There was an error processing the Bible verse. Please try again later.' });
+            // Check if we can still reply
+            try {
+                await interaction.editReply({ content: '❌ There was an error processing the Bible verse. Please try again later.' });
+            } catch (replyError) {
+                console.error('Failed to send error reply:', replyError);
+            }
         }
     }
 };

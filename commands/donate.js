@@ -1,9 +1,11 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 
 export default {
     data: new SlashCommandBuilder()
         .setName('donate')
-        .setDescription('Provides information on how to support the bot.'),
+        .setDescription('Provides information on how to support the bot.')
+        .setIntegrationTypes([0, 1])
+        .setContexts([0, 1, 2]),
     async execute(interaction) {
         const embed = new EmbedBuilder()
             .setColor(0xFFD700) // Gold
@@ -15,6 +17,6 @@ export default {
             .setFooter({ text: 'Thank you for your generosity! • Bible Bot' })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
     }
 }

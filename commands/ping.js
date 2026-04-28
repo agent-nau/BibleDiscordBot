@@ -1,14 +1,16 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 
 export default {
     data: new SlashCommandBuilder() 
         .setName('ping')
-        .setDescription('Replies with Pong and shows bot latency'),
+        .setDescription('Replies with Pong and shows bot latency')
+        .setIntegrationTypes([0, 1]) // Guild and User
+        .setContexts([0, 1, 2]), // Guild, Bot DM, Private Channel
 
   async execute(interaction) {
     const response = await interaction.reply({ 
       content: 'Pinging...', 
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
       withResponse: true 
     });
     

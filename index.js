@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { Client, GatewayIntentBits, Collection, REST, Routes } from 'discord.js';
+import { Client, GatewayIntentBits, Collection, REST, Routes, MessageFlags } from 'discord.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -99,12 +99,13 @@ client.on('interactionCreate', async interaction => {
     
     try {
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ content: errorMessage, ephemeral: true });
+        await interaction.followUp({ content: errorMessage, flags: [MessageFlags.Ephemeral] });
       } else {
-        await interaction.reply({ content: errorMessage, ephemeral: true });
+        await interaction.reply({ content: errorMessage, flags: [MessageFlags.Ephemeral] });
       }
     } catch (replyError) {
-      console.error('[Interaction] Failed to send error message:', replyError);
+      // If the interaction has already been acknowledged or is unknown, we just log it
+      console.error('[Interaction] Failed to send error message:', replyError.message);
     }
   }
 });
