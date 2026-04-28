@@ -5,6 +5,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { keepAlive } from './keep-alive.js';
 
+// Validate environment variables
+const requiredEnv = ['DISCORD_TOKEN', 'CLIENT_ID'];
+const missingEnv = requiredEnv.filter(env => !process.env[env]);
+
+if (missingEnv.length > 0) {
+  console.error(`❌ Missing required environment variables: ${missingEnv.join(', ')}`);
+  console.error('👉 Please set these in your Render Environment Variables dashboard.');
+  process.exit(1);
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
