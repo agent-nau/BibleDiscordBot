@@ -43,6 +43,11 @@ export default {
         .setRequired(false)
     ),
     async execute(interaction) {
+        if (interaction.user.id !== process.env.OWNER_ID) {
+            await interaction.reply('Only the bot owner can use this command.');
+            return;
+        }
+
         const book = interaction.options.getString('book');
         const chapter = interaction.options.getInteger('chapter');
         const verse = interaction.options.getInteger('verse');
