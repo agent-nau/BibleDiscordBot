@@ -67,7 +67,7 @@ try {
 }
 
 // Event: Bot ready
-client.once('ready', () => {
+client.once('clientReady', () => {
   console.log(`🤖 Logged in as ${client.user.tag}`);
   console.log(`📊 Serving ${client.guilds.cache.size} guild(s)`);
 });

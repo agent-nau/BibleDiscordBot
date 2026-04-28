@@ -6,10 +6,12 @@ export default {
         .setDescription('Replies with Pong and shows bot latency'),
 
   async execute(interaction) {
-    const sent = await interaction.reply({ 
+    const response = await interaction.reply({ 
       content: 'Pinging...', 
-      fetchReply: true 
+      withResponse: true 
     });
+    
+    const sent = await response.fetch();
     
     const latency = sent.createdTimestamp - interaction.createdTimestamp;
     const apiLatency = Math.round(interaction.client.ws.ping);
