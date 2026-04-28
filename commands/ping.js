@@ -1,7 +1,7 @@
-import { SlashcommandBuilder } from '@discord.js';
+import { SlashCommandBuilder } from 'discord.js';
 
 export default {
-    data: new SlashcommandBuilder() 
+    data: new SlashCommandBuilder() 
         .setName('ping')
         .setDescription('Replies with Pong and shows bot latency'),
 
