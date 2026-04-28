@@ -98,14 +98,24 @@ client.on('interactionCreate', async interaction => {
     const errorMessage = '❌ There was an error processing this interaction!';
     
     try {
+      // Check if interaction is already acknowledged
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp({ content: errorMessage, flags: [MessageFlags.Ephemeral] });
       } else {
+        // Double check the error code to see if it was already acknowledged but the state didn't update
         await interaction.reply({ content: errorMessage, flags: [MessageFlags.Ephemeral] });
       }
     } catch (replyError) {
-      // If the interaction has already been acknowledged or is unknown, we just log it
-      console.error('[Interaction] Failed to send error message:', replyError.message);
+      // Handle the case where it was already acknowledged despite our check
+      if (replyError.code === 40060 || replyError.message.includes('already been acknowledged')) {
+        try {
+          await interaction.followUp({ content: errorMessage, flags: [MessageFlags.Ephemeral] });
+        } catch (followUpError) {
+          console.error('[Interaction] Failed to send follow-up error:', followUpError.message);
+        }
+      } else {
+        console.error('[Interaction] Failed to send error message:', replyError.message);
+      }
     }
   }
 });

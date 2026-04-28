@@ -69,12 +69,11 @@ export default {
 
     async execute(interaction) {
         // Defer reply IMMEDIATELY to prevent "Unknown interaction" (timeout)
-        // Using flags instead of ephemeral to fix deprecation warning
         try {
             await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
         } catch (error) {
             console.error('Error deferring reply:', error);
-            return; // Interaction likely timed out
+            return;
         }
 
         const intervalHours = interaction.options.getInteger('interval');
@@ -92,10 +91,29 @@ export default {
             if (verse) {
                 const embed = createVerseEmbed(verse);
                 
-                // Send the embed publicly to the channel
-                await interaction.channel.send({ embeds: [embed] });
-
                 let statusText = '✅ Sent!';
+
+                // Check if channel exists (might be null in some contexts like User Installs)
+                if (interaction.channel) {
+                    try {
+                        // Send the embed publicly to the channel
+                        await interaction.channel.send({ embeds: [embed] });
+                    } catch (sendError) {
+                        console.error('Failed to send public message:', sendError);
+                        statusText = '✅ Here is your verse (could not send to channel publically):';
+                        // Fallback: send it as the reply instead of just status
+                        return await interaction.editReply({ 
+                            content: statusText,
+                            embeds: [embed]
+                        });
+                    }
+                } else {
+                    // If no channel, just send it as the ephemeral response
+                    return await interaction.editReply({ 
+                        content: '✅ Here is your random verse:',
+                        embeds: [embed]
+                    });
+                }
                 
                 // Handle scheduling
                 const channelId = interaction.channel.id;
@@ -124,9 +142,10 @@ export default {
             }
         } catch (error) {
             console.error('Error in setbibleverse command:', error);
-            // Check if we can still reply
             try {
-                await interaction.editReply({ content: '❌ There was an error processing the Bible verse. Please try again later.' });
+                if (interaction.deferred || interaction.replied) {
+                    await interaction.editReply({ content: '❌ There was an error processing the Bible verse. Please try again later.' });
+                }
             } catch (replyError) {
                 console.error('Failed to send error reply:', replyError);
             }
