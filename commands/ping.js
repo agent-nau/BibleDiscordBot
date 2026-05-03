@@ -9,8 +9,7 @@ export default {
 
   async execute(interaction) {
     const response = await interaction.reply({ 
-      content: 'Pinging...', 
-      flags: [MessageFlags.Ephemeral],
+      content: 'Pinging...',
       withResponse: true 
     });
     
